@@ -35,13 +35,17 @@ class Node:
         if ratio<0.2 or ratio>0.7: #0.25, 0.50
             cid = random.choice(self.children)
         else:
+            #random
+            #cid = random.choice(self.children)
             # chose a child that is furhter from the center row
+            #"""
             dists = []
             for child in self.children: dists.append(abs(child-0.5*self.n))
             children = [x for _,x in sorted(zip(dists,self.children))]
             cid = children[0]
-            """
+            #"""
             #choose child that adds longest sum of vectors
+            """
             sums = []
             for child in self.children:
                 next_vecs = get_vecs(child,self.dots)
@@ -69,12 +73,12 @@ def get_all_vecs(dots):
             vecs.append(np.array([i-j,dots[i]-dots[j]]))
     return np.array(vecs)
 
-
-start_n = 12
-no_steps = 20
-no_sols = 10
-
+start_n = 17
+no_steps = 2
+no_sols = 500
 save = True
+
+init_poliy = 1 #0: random, 1: based on previous valid solution for N-1
 
 for steps in range(no_steps):
     n=start_n+steps
@@ -95,8 +99,12 @@ for steps in range(no_steps):
                     if len(last_node.parent.children)>0: #if there is another porential child
                         next_id = last_node.parent.select_child()
                         nodes.append(Node(next_id,last_node.parent))
+                        nodes.remove(last_node)
                         break
-                    else: last_node = last_node.parent # if there is no other porential child, backtrack further
+                    else:
+                        nodes.remove(last_node)
+                        last_node = last_node.parent # if there is no other porential child, backtrack further
+
         # Finish up
         solutions.append(nodes[-1].dots)
         duration = round(time.time()-start_time,4)
@@ -109,12 +117,12 @@ for steps in range(no_steps):
         print("Finished in", format(duration, '.2f'), "s. Array:",nodes[-1].dots,"N:",n,"Prog:",str(no_sol+1)+"/"+str(no_sols),". Ver:",verified_costas_array)
     if duration>=60*60: break
     if save:
-        file = open("data12up/solitions_"+str(n)+".txt","w")
+        file = open("data/solitions_"+str(n)+".txt","w")
         for sol in solutions:
             for item in sol:
                 if item==sol[-1]: file.write("%s\n" % item)
                 else: file.write("%s," % item)
         file.close()
-        file = open("data12up/durations_"+str(n)+".txt","w")
+        file = open("data/durations_"+str(n)+".txt","w")
         for dur in durations: file.write(str(format(dur, '.4f'))+"\n")
         file.close()
