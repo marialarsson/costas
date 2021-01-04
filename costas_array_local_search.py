@@ -38,7 +38,6 @@ def import_previous_solutions(n):
     file.close()
     return sols
 
-
 def get_bad_except_tabu(costs,tabu):
     n = len(costs)
     ids = list(range(n))
@@ -49,9 +48,9 @@ def get_bad_except_tabu(costs,tabu):
     ids.reverse()
     return ids
 
-start_n = 18
+start_n = 10
 no_steps = 2
-no_sols = 10
+no_sols = 1
 init_policy = 1 #0: random, 1: based on previous successful solution of a N-1 array
 max_time = 60*2
 save = False
@@ -80,8 +79,11 @@ for steps in range(no_steps):
             if init_policy==0:
                 dots = np.random.permutation(n)
             elif init_policy==1:
+                # Take a random solution of n-1, insert a random column and row to this solution
                 dots = random.choice(pre_solutions)
-                dots = np.insert(dots, random.randint(0,n-1), n-1)
+                rcol, rrow = random.randint(0,n-1), random.randint(0,n-1)
+                dots[dots>=rcol]+=1
+                dots = np.insert(dots, rrow, rcol)
             tabu = []
             cost = 999
             iter = 0
