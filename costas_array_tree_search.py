@@ -19,8 +19,6 @@ class Node:
 
     def get_children(self):
         self.children = []
-        #if self.depth==0: self.children = list(range(math.ceil(0.5*self.n)))
-        #else:
         children_ids = list(set(list(range(self.n)))-set(self.dots)) #all minus previous dots
         for cid in children_ids:
             id_ok = True
@@ -35,35 +33,53 @@ class Node:
         if ratio<0.2 or ratio>0.7: #0.25, 0.50
             cid = random.choice(self.children)
         else:
-            #random
+            #CHOSE A HEURISTIC
+            #1. Random
             #cid = random.choice(self.children)
-            # chose a child that is furhter from the center row
-            #"""
-            dists = []
-            for child in self.children: dists.append(abs(child-0.5*self.n))
-            children = [x for _,x in sorted(zip(dists,self.children))]
-            cid = children[0]
-            #"""
-            #choose child that adds longest sum of vectors
+            #2b. Choose the child that with longest sum of vectors
             """
             sums = []
             for child in self.children:
                 next_vecs = get_vecs(child,self.dots)
-                sum = 0
-                for vec in next_vecs: sum+=np.linalg.norm(vec)
-                sums.append(sum)
-                children = [x for _,x in sorted(zip(sums,self.children))]
-                cid = children[0]
+                ##Heuristic A
+                vec_lens = []
+                for vec in next_vecs: vec_lens.append(np.linalg.norm(vec))
+                sums.append(max(vec_lens))
+                ##Heuristic B
+                #sum = 0
+                #for vec in next_vecs: sum+=np.linalg.norm(vec)
+                #sums.append(sum)
+            children = [x for _,x in sorted(zip(sums,self.children))]
+            cid = children[0]
             """
+
+            #3. Choose the child that is the furthest from the center column
+
+            dists = []
+            for child in self.children: dists.append(abs(child-0.5*self.n))
+            children = [x for _,x in sorted(zip(dists,self.children))]
+            cid = children[0]
+
+
         return cid
 
 #integrate the 2 functions below. make get vecs a subfucntion of get all vecs
+def get_vecs_test(id,dots):
+    if len(dots)==0:
+        vecs = [[0,id]]
+    else:
+        a = np.flip(np.arange(len(dots)))+1
+        b = id-np.copy(dots)
+        vecs = np.column_stack((a,b))
+    return vecs
+
 def get_vecs(id,dots):
     vecs = []
     i = len(dots) # or len(dots)+1??
     for j,dot in enumerate(dots):
         vecs.append([i-j,id-dot])
     return vecs
+
 
 def get_all_vecs(dots):
     vecs = []
@@ -73,12 +89,10 @@ def get_all_vecs(dots):
             vecs.append(np.array([i-j,dots[i]-dots[j]]))
     return np.array(vecs)
 
-start_n = 17
-no_steps = 2
-no_sols = 500
+start_n = 18
+no_steps = 1
+no_sols = 20
 save = True
-
-init_poliy = 1 #0: random, 1: based on previous valid solution for N-1
 
 for steps in range(no_steps):
     n=start_n+steps
@@ -113,16 +127,21 @@ for steps in range(no_steps):
         verified_costas_array = False #double checking validity of list
         vecs = get_all_vecs(nodes[-1].dots)
         if np.unique(vecs, axis=0).shape[0]==vecs.shape[0]: verified_costas_array=True
-        #if no_sol%10==0:
-        print("Finished in", format(duration, '.2f'), "s. Array:",nodes[-1].dots,"N:",n,"Prog:",str(no_sol+1)+"/"+str(no_sols),". Ver:",verified_costas_array)
+        if no_sol%10==0:
+            print("Finished in", format(duration, '.2f'), "s. Array:",nodes[-1].dots,"N:",n,"Prog:",str(no_sol+1)+"/"+str(no_sols),". Ver:",verified_costas_array)
+    mid_index = int(len(durations)/2)
+    median_duration = list(durations)
+    median_duration.sort()
+    median_duration = median_duration[mid_index]
+    print("Finished in mediam time", format(median_duration, '.2f'), "s")
     if duration>=60*60: break
     if save:
-        file = open("data/solitions_"+str(n)+".txt","w")
+        file = open("data_ts_18/solitions_"+str(n)+".txt","w")
         for sol in solutions:
             for item in sol:
                 if item==sol[-1]: file.write("%s\n" % item)
                 else: file.write("%s," % item)
         file.close()
-        file = open("data/durations_"+str(n)+".txt","w")
-        for dur in durations: file.write(str(format(dur, '.4f'))+"\n")
-        file.close()
+        #file = open("data_ts_18/durations_"+str(n)+".txt","w")
+        #for dur in durations: file.write(str(format(dur, '.4f'))+"\n")
+        #file.close()
